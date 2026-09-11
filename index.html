@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>じいちゃんの雪かき - 新潟豪雪地帯・高齢者除雪体験ゲーム</title>
+  <meta name="description" content="新潟の豪雪地帯における高齢者の除雪負担と地域支え合いの重要性を疑似体験するWebゲーム" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kaisei+Decol:wght@500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+
+<body>
+  <div id="app">
+    <!-- Title Screen Overlay -->
+    <div id="title-screen-overlay" class="modal-overlay">
+      <div class="title-card">
+        <div class="title-badge-row">
+          <div class="title-badge">にいがたデジコングランプリ 応募作品</div>
+          <div class="title-badge-year">2026 ❄️</div>
+        </div>
+        <h1>じいちゃんの雪かき</h1>
+        <p class="tagline">〜 新潟の冬、一人で雪と向き合う高齢者の体験 〜</p>
+
+        <div class="story-box">
+          <p>
+            雪国・新潟の一軒家。今年も連日の大雪で家の前が雪で埋もれてしまいました。<br />
+            腰の痛みに耐えながら、一人暮らしのじいちゃんがスコップを取ります。
+          </p>
+          <p class="note">
+            ※このゲームは爽快ゲームではなく、除雪の重みとつらさをリアルに体感してもらうための作品です。
+          </p>
+        </div>
+
+        <!-- 3-day stage overview -->
+        <div class="stage-overview">
+          <div class="stage-day">
+            <span class="stage-icon">🏠</span>
+            <div>
+              <strong>1日目</strong>
+              <span class="stage-sub">玄関・庭の新雪除雪</span>
+            </div>
+          </div>
+          <div class="stage-arrow">→</div>
+          <div class="stage-day">
+            <span class="stage-icon">🏔️</span>
+            <div>
+              <strong>2日目</strong>
+              <span class="stage-sub">命がけの屋根雪下ろし</span>
+            </div>
+          </div>
+          <div class="stage-arrow">→</div>
+          <div class="stage-day">
+            <span class="stage-icon">🌨️</span>
+            <div>
+              <strong>3日目</strong>
+              <span class="stage-sub">猛吹雪・総力戦</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="game-rules">
+          <h3>🎮 操作方法</h3>
+          <ul>
+            <li><strong>雪かき:</strong> マウス/タッチでドラッグして雪を掻く</li>
+            <li><strong>体力管理:</strong> 疲れると動きが重くなり視界が暗くなります。「休憩」で回復</li>
+            <li><strong>お助けシステム:</strong> 近所の人やボランティアを頼ることがクリアの鍵です</li>
+            <li><strong>2日目は屋根ステージ:</strong> 軒先に近づきすぎると転落！命綱を必ず使おう</li>
+          </ul>
+        </div>
+
+        <!-- Highscore display -->
+        <div class="highscore-box" id="title-highscore-box">
+          <span class="hs-label">🏆 ハイスコア</span>
+          <span class="hs-val" id="title-hs-score">---</span>
+          <span class="hs-detail" id="title-hs-detail"></span>
+        </div>
+
+        <button id="btn-start-game" class="btn-start">❄️ 雪かきをはじめる ❄️</button>
+      </div>
+    </div>
+
+
+    <!-- Main Game Container -->
+    <div class="game-container">
+      <!-- Top HUD Header -->
+      <header class="hud-header">
+        <div class="hud-left">
+          <h2 id="ui-day-title">1日目: しんしんと降る初雪</h2>
+          <div class="hud-time">
+            <span>残り時間:</span>
+            <strong id="ui-time-text">90s</strong>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <div class="clearance-meter">
+            <span class="meter-label">除雪完了率</span>
+            <span class="meter-val"><strong id="ui-clear-percent">0%</strong> / <span
+                id="ui-target-percent">75%</span></span>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="score-box">
+            <span>スコア:</span>
+            <strong id="ui-score-text">0 P</strong>
+          </div>
+          <button id="btn-sound-toggle" class="btn-icon">🔊 Sound ON</button>
+        </div>
+      </header>
+
+      <!-- Canvas Viewport with Fatigue Vignette Filter -->
+      <div class="canvas-wrapper">
+        <div id="ui-fatigue-vignette" class="fatigue-vignette"></div>
+        <canvas id="game-canvas" width="800" height="560"></canvas>
+      </div>
+
+      <!-- Bottom Action Bar & Support System Controls -->
+      <footer class="hud-footer">
+        <!-- Tool Selector & Stamina Section -->
+        <div class="stamina-section">
+          <!-- Tool Switcher -->
+          <div class="tool-selector">
+            <span class="tool-label">道具切替:</span>
+            <button id="btn-tool-shovel" class="btn-tool active" title="小回りが利き、軽い。狭い範囲を丁寧に">🧹 角スコップ</button>
+            <button id="btn-tool-dump" class="btn-tool" title="広範囲を一気に運ぶが重く、体力の消耗が大きい">🚜 スノーダンプ</button>
+          </div>
+
+          <div class="stamina-label">
+            <span>体力ゲージ:</span>
+            <span id="ui-stamina-text">100 / 100</span>
+          </div>
+          <div class="stamina-bar-track">
+            <div id="ui-stamina-fill" class="stamina-bar-fill"></div>
+          </div>
+          <button id="btn-rest" class="btn-rest">🍵 休憩する（お茶を飲む）</button>
+        </div>
+
+        <!-- Support Assistance System Buttons -->
+        <div class="support-section">
+          <span class="section-title">【お助けシステム】周囲に支援を頼む:</span>
+          <div id="ui-support-container" class="support-buttons">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Niigata Snow Trivia Banner -->
+        <div id="ui-column-trivia" class="trivia-banner">
+          🌾 <strong>【新潟除雪豆知識】</strong> 新雪は軽いうちに退けるのが鉄則！放置すると固まって重くなります。
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
